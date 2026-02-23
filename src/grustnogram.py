@@ -163,7 +163,7 @@ class GrustnoGram:
             "avatar": self.upload_media(avatar)["data"] if avatar else None
         }
         filtered_data = {
-            key: value for key, value in payload.items() if value is not None
+            key: value for key, value in data.items() if value is not None
         }
         return self.session.put(
             f"{self.api}/users/self", json=filtered_data).json()
