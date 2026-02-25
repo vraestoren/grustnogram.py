@@ -3,8 +3,8 @@ Mobile-API for [grustnogram](https://play.google.com/store/apps/details?id=com.t
 
 ## Example
 ```python
-import grustnogram
+from grustnogram import GrustnoGram
 
-grustnogram = grustnogram.GrustnoGram()
+grustnogram = GrustnoGram()
 grustnogram.login(email="example@gmail.com", password="password")
 ```
