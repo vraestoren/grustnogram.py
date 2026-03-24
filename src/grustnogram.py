@@ -9,14 +9,30 @@ class GrustnoGram:
             "User-Agent": "Dart/2.16 (dart:io)"
         }
         self.access_token = None
+        self.user_id = None
+
+    def _post(self, endpoint: str, data: dict = None) -> dict:
+        return self.session.post(
+            f"{self.api}{endpoint}", json=data).json()
+
+    def _get(self, endpoint: str, params: dict = None) -> dict:
+        return self.session.get(
+            f"{self.api}{endpoint}", params=params).json()
+
+    def _put(self, endpoint: str, data: dict = None) -> dict:
+        return self.session.put(
+            f"{self.api}{endpoint}", json=data).json()
+
+    def _delete(self, endpoint: str) -> dict:
+        return self.session.delete(
+            f"{self.api}{endpoint}").json()
+
+    def _filter(self, data: dict) -> dict:
+        return {key: value for key, value in data.items() if value is not None}
 
     def upload_media(self, file: bytes) -> dict:
         files = {
-            "file": (
-                "image.jpg",
-                file,
-                "image/jpg"
-            )
+            "file": ("image.jpg", file, "image/jpg")
         }
         return self.session.post(
             f"{self.media_api}/cors.php", files=files).json()
@@ -26,16 +42,12 @@ class GrustnoGram:
             "email": email,
             "password": password
         }
-        response = self.session.post(
-            f"{self.api}/sessions", json=data).json()
+        response = self._post("/sessions", data)
         if response["data"]:
             self.access_token = response["data"]["access_token"]
             self.session.headers["access-token"] = self.access_token
             self.user_id = self.get_current_session()["data"]["id"]
         return response
-
-    def get_current_session(self) -> dict:
-        return self.session.get( f"{self.api}/users/self").json()
 
     def register(
             self,
@@ -47,8 +59,10 @@ class GrustnoGram:
             "email": email,
             "password": password
         }
-        return self.session.post(
-            f"{self.api}/users", json=data).json()
+        return self._post("/users", data)
+
+    def get_current_session(self) -> dict:
+        return self._get("/users/self")
 
     def get_phone_activation_code(
             self,
@@ -58,8 +72,7 @@ class GrustnoGram:
             "phone_key": phone_key,
             "phone": phone_number
         }
-        return self.session.post(
-            f"{self.api}/callme", json=data).json()
+        return self._post("/callme", data)
 
     def activate_phone(
             self,
@@ -69,54 +82,44 @@ class GrustnoGram:
             "phone": phone_number,
             "code": activation_code
         }
-        return self.session.post(
-            f"{self.api}/phoneactivate", json=data).json()
+        return self._post("/phoneactivate", data)
 
     def reset_password(self, email: str) -> dict:
         data = {
             "email": email
         }
-        return self.session.post(
-            f"{self.api}/respsswd", json=data).json()
+        return self._post("/respsswd", data)
 
     def like_post(self, post_id: int) -> dict:
-        return self.session.post(
-            f"{self.api}/posts/{post_id}/like").json()
+        return self._post(f"/posts/{post_id}/like")
 
     def unlike_post(self, post_id: int) -> dict:
-        return self.session.delete(
-            f"{self.api}/posts/{post_id}/like").json()
+        return self._delete(f"/posts/{post_id}/like")
 
     def get_post_comments(
-            self,
-            post_id: int,
-            offset: int = 0) -> dict:
-        return self.session.get(
-            f"{self.api}/posts/{post_id}/comments?offset={offset}").json()
+            self, post_id: int, offset: int = 0) -> dict:
+        return self._get(
+            f"/posts/{post_id}/comments?offset={offset}")
 
     def get_post_likes(
-            self,
-            post_id: int,
-            offset: int = 0) -> dict:
-        return self.session.get(
-            f"{self.api}/posts/{post_id}/likes?offset={offset}").json()
+            self, post_id: int, offset: int = 0) -> dict:
+        return self._get(
+            f"/posts/{post_id}/likes?offset={offset}")
 
     def get_status(self) -> dict:
-        return self.session.get(
-            f"{self.api}/status").json()
+        return self._get("/status")
 
-    def get_posts_list(self, type: str = None) -> dict:
-        params = {type: 1} if type else {}
-        return self.session.get(
-            f"{self.api}/posts", params=params).json()
+    def get_posts_list(self, post_type: str = None) -> dict:
+        params = {post_type: 1} if post_type else {}
+        return self._get("/posts", params)
 
     def get_user_posts(
             self,
             user_id: int,
             limit: int = 15,
             offset: int = 0) -> dict:
-        return self.session.get(
-            f"{self.api}/posts?id_user={user_id}&limit={limit}&offset={offset}").json()
+        return self._get(
+            f"/posts?id_user={user_id}&limit={limit}&offset={offset}")
 
     def comment_post(
             self,
@@ -127,28 +130,22 @@ class GrustnoGram:
             "comment": comment,
             "reply-to": reply_to
         }
-        return self.session.post(
-            f"{self.api}/posts/{post_id}/comments", json=data).json()
+        return self._post(f"/posts/{post_id}/comments", data)
 
     def delete_comment(self, comment_id: int) -> dict:
-        return self.session.delete(
-            f"{self.api}/posts/comments/{comment_id}").json()
+        return self._delete(f"/posts/comments/{comment_id}")
 
     def follow_user(self, user_id: int) -> dict:
-        return self.session.post(
-            f"{self.api}/users/{user_id}/follow").json()
+        return self._post(f"/users/{user_id}/follow")
 
     def unfollow_user(self, user_id: int) -> dict:
-        return self.session.delete(
-            f"{self.api}/users/{user_id}/follow").json()
+        return self._delete(f"/users/{user_id}/follow")
 
     def get_user_followers(self, user_id: int) -> dict:
-        return self.session.get(
-            f"{self.api}/followers/{user_id}").json()
+        return self._get(f"/followers/{user_id}")
 
     def get_user_followings(self, user_id: int) -> dict:
-        return self.session.get(
-            f"{self.api}/follow/{user_id}").json()
+        return self._get(f"/follow/{user_id}")
 
     def edit_profile(
             self,
@@ -156,90 +153,70 @@ class GrustnoGram:
             name: str = None,
             about: str = None,
             avatar: bytes = None) -> dict:
-        data = {
+        data = self._filter({
             "nickname": nickname,
             "name": name,
             "about": about,
             "avatar": self.upload_media(avatar)["data"] if avatar else None
-        }
-        filtered_data = {
-            key: value for key, value in data.items() if value is not None
-        }
-        return self.session.put(
-            f"{self.api}/users/self", json=filtered_data).json()
+        })
+        return self._put("/users/self", data)
 
     def create_post(
             self,
             text: str,
             image: bytes,
-            filter: int = 0) -> dict:
+            post_filter: int = 0) -> dict:
         data = {
             "media": [self.upload_media(image)["data"]],
             "text": text,
-            "filter": filter
+            "filter": post_filter
         }
-        return self.session.post(
-            f"{self.api}/posts", json=data).json()
+        return self._post("/posts", data)
 
     def get_user_info(self, nickname: str) -> dict:
-        return self.session.get(
-            f"{self.api}/users/{nickname}").json()
+        return self._get(f"/users/{nickname}")
 
     def block_user(self, user_id: int) -> dict:
-        return self.session.post(
-            f"{self.api}/users/{user_id}/block").json()
+        return self._post(f"/users/{user_id}/block")
 
     def unblock_user(self, user_id: int) -> dict:
-        return self.session.delete(
-            f"{self.api}/users/{user_id}/block").json()
+        return self._delete(f"/users/{user_id}/block")
 
     def report_user(
-            self,
-            user_id: int,
-            type: int = 1) -> dict:
+            self, user_id: int, report_type: int = 1) -> dict:
         data = {
-            "type": type
+            "type": report_type
         }
-        return self.session.post(
-            f"{self.api}/users/{user_id}/complaint", json=data).json()
+        return self._post(f"/users/{user_id}/complaint", data)
 
     def report_comment(self, comment_id: int) -> dict:
-        return self.session.post(
-            f"{self.api}/posts/comments/{comment_id}/complaint").json()
+        return self._post(
+            f"/posts/comments/{comment_id}/complaint")
 
     def report_post(
-            self,
-            post_id: int,
-            type: int = 1) -> dict:
+            self, post_id: int, report_type: int = 1) -> dict:
         data = {
-            "type": type
+            "type": report_type
         }
-        return self.session.post(
-            f"{self.api}/posts/{post_id}/complaint", json=data).json()
+        return self._post(f"/posts/{post_id}/complaint", data)
 
     def like_comment(self, comment_id: int) -> dict:
-        return self.session.post(
-            f"{self.api}/comments/{comment_id}/like").json()
+        return self._post(f"/comments/{comment_id}/like")
 
     def unlike_comment(self, comment_id: int) -> dict:
-        return self.session.delete(
-            f"{self.api}/comments/{comment_id}/like").json()
+        return self._delete(f"/comments/{comment_id}/like")
 
     def get_notifications(self) -> dict:
-        return self.session.get(
-            f"{self.api}/notifications").json()
+        return self._get("/notifications")
 
     def search_user(self, query: str) -> dict:
-        return self.session.get(
-            f"{self.api}/users?q={query}").json()
+        return self._get(f"/users?q={query}")
 
     def search_post(self, query: str) -> dict:
-        return self.session.get(
-            f"{self.api}/posts?q={query}").json()
+        return self._get(f"/posts?q={query}")
 
     def get_users_list(self, top: int = 1) -> dict:
-        return self.session.get(
-            f"{self.api}/users?top={top}").json()
+        return self._get(f"/users?top={top}")
 
     def change_password(
             self,
@@ -249,16 +226,13 @@ class GrustnoGram:
             "old_password": old_password,
             "new_password": new_password
         }
-        return self.session.put(
-            f"{self.api}/users/self", json=data).json()
+        return self._put("/users/self", data)
 
     def edit_post(self, post_id: int, text: str) -> dict:
         data = {
             "text": text
         }
-        return self.session.put(
-            f"{self.api}/posts/{post_id}", json=data).json()
+        return self._put(f"/posts/{post_id}", data)
 
     def delete_post(self, post_id: int) -> dict:
-        return self.session.delete(
-            f"{self.api}/posts/{post_id}").json()
+        return self._delete(f"/posts/{post_id}")
